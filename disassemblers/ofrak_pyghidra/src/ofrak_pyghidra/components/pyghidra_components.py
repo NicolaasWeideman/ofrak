@@ -318,7 +318,9 @@ class PyGhidraDecompilationAnalyzer(CachedDecompilationAnalyzer):
             if "decompilation" not in analysis[cb_key]:
                 program_file = analysis["metadata"]["path"]
                 language = analysis["metadata"]["language"]
-                base_addr = analysis["metadata"]["base_address"]
+                base_addr = None
+                if "base_address" in analysis["metadata"]:
+                    base_addr = analysis["metadata"]["base_address"]
                 for cb_key, decomp in decompile_all_functions(
                     program_file, language, base_addr
                 ).items():

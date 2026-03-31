@@ -485,9 +485,10 @@ def decompile_all_functions(program_file, language, base_addr):
 
         decomp = DecompInterface()
         program = flat_api.getCurrentProgram()
-        address_factory = program.getAddressFactory()
-        new_base_addr = address_factory.getDefaultAddressSpace().getAddress(hex(base_addr))
-        program.setImageBase(new_base_addr, True)
+        if base_addr is not None:
+            address_factory = program.getAddressFactory()
+            new_base_addr = address_factory.getDefaultAddressSpace().getAddress(hex(base_addr))
+            program.setImageBase(new_base_addr, True)
         GhidraProject.analyze(program)
         prog_options = DecompileOptions()
         prog_options.grabFromProgram(program)
