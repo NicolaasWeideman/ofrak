@@ -51,6 +51,7 @@ def unpack(
             from ghidra.util.task import TaskMonitor
             from ghidra.program.model.block import BasicBlockModel
             from ghidra.program.model.symbol import RefType
+            from ghidra.base.project import GhidraProject
             from java.math import BigInteger
             from java.io import ByteArrayInputStream
 
@@ -481,6 +482,7 @@ def decompile_all_functions(program_file, language):
     with pyghidra.open_program(program_file, language=language, analyze=False) as flat_api:
         from ghidra.app.decompiler import DecompInterface, DecompileOptions
         from ghidra.util.task import TaskMonitor
+        from ghidra.base.project import GhidraProject
 
         decomp = DecompInterface()
         program = flat_api.getCurrentProgram()
