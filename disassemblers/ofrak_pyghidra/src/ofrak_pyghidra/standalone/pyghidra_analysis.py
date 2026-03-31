@@ -44,7 +44,7 @@ def unpack(
             program_file = os.path.join(tempdir, "program")
             with open(program_file, "wb") as f:
                 f.write(b"\x00")
-        with pyghidra.open_program(program_file, language=language) as flat_api:
+        with pyghidra.open_program(program_file, language=language, analyze=False) as flat_api:
             LOGGER.info("Analysis completed. Caching analysis to JSON")
             # Java packages must be imported after pyghidra.start or pyghidra.open_program
             from ghidra.app.decompiler import DecompInterface, DecompileOptions
@@ -110,6 +110,7 @@ def unpack(
                 )
                 program.setImageBase(new_base_addr, True)
                 LOGGER.info(f"Rebased program address to {hex(base_address)}")
+                GhidraProject.analyze(program)
 
             main_dictionary: Dict[str, Any] = {}
             code_regions = _unpack_program(flat_api)
@@ -117,6 +118,7 @@ def unpack(
             main_dictionary["metadata"]["backend"] = "ghidra"
             main_dictionary["metadata"]["decompiled"] = decompiled
             main_dictionary["metadata"]["path"] = program_file
+            main_dictionary["metadata"]["language"] = language
             if base_address is not None:
                 main_dictionary["metadata"]["base_address"] = base_address
             with open(program_file, "rb") as fh:
@@ -475,13 +477,18 @@ def _decompile(func, decomp_interface, task_monitor):
     return decomp
 
 
-def decompile_all_functions(program_file, language):
-    with pyghidra.open_program(program_file, language=language) as flat_api:
+def decompile_all_functions(program_file, language, base_addr):
+    with pyghidra.open_program(program_file, language=language, analyze=False) as flat_api:
         from ghidra.app.decompiler import DecompInterface, DecompileOptions
         from ghidra.util.task import TaskMonitor
+        from ghidra.base.project import GhidraProject
 
         decomp = DecompInterface()
         program = flat_api.getCurrentProgram()
+        address_factory = program.getAddressFactory()
+        new_base_addr = address_factory.getDefaultAddressSpace().getAddress(hex(base_addr))
+        program.setImageBase(new_base_addr, True)
+        GhidraProject.analyze(program)
         prog_options = DecompileOptions()
         prog_options.grabFromProgram(program)
         decomp.setOptions(prog_options)
