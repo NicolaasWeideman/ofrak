@@ -90,9 +90,6 @@ def unpack(
                         logging.warning(
                             f"Failed to create memory block at 0x{region['virtual_address']:x}: {e}"
                         )
-                # Analyze all
-                analysis_mgr = program.getOptions("Analyzers")
-                flat_api.analyzeAll(program)
             # If base_address is provided, rebase the program
             if base_address is not None:
                 # Convert base_address to int if it's a string
@@ -110,7 +107,7 @@ def unpack(
                 )
                 program.setImageBase(new_base_addr, True)
                 LOGGER.info(f"Rebased program address to {hex(base_address)}")
-                GhidraProject.analyze(program)
+            GhidraProject.analyze(program)
 
             main_dictionary: Dict[str, Any] = {}
             code_regions = _unpack_program(flat_api)
