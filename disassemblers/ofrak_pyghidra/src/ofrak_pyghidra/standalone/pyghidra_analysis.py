@@ -51,6 +51,7 @@ def unpack(
             from ghidra.util.task import TaskMonitor
             from ghidra.program.model.block import BasicBlockModel
             from ghidra.program.model.symbol import RefType
+            from ghidra.base.project import GhidraProject
             from java.math import BigInteger
             from java.io import ByteArrayInputStream
 
