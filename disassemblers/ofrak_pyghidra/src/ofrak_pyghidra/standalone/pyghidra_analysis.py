@@ -55,9 +55,9 @@ def unpack(
             from java.math import BigInteger
             from java.io import ByteArrayInputStream
 
+            program = flat_api.getCurrentProgram()
             # If memory_regions are provided, delete all data and create new regions:
             if memory_regions:
-                program = flat_api.getCurrentProgram()
                 memory = program.getMemory()
                 address_factory = program.getAddressFactory()
                 default_space = address_factory.getDefaultAddressSpace()
@@ -101,7 +101,6 @@ def unpack(
                         base_address = int(base_address)
 
                 # Rebase the program to the specified base address
-                program = flat_api.getCurrentProgram()
                 address_factory = program.getAddressFactory()
                 new_base_addr = address_factory.getDefaultAddressSpace().getAddress(
                     hex(base_address)
