@@ -226,7 +226,13 @@ class PyGhidraDecompilationAnalyzer(CachedDecompilationAnalyzer):
             analysis = self.analysis_store.get_analysis(program_r.get_id())
             if "decompilation" not in analysis[cb_key]:
                 program_file = analysis["metadata"]["path"]
-                for cb_key, decomp in decompile_all_functions(program_file, None).items():
+                language = analysis["metadata"]["language"]
+                base_addr = None
+                if "base_address" in analysis["metadata"]:
+                    base_addr = analysis["metadata"]["base_address"]
+                for cb_key, decomp in decompile_all_functions(
+                    program_file, language, base_addr
+                ).items():
                     analysis[cb_key]["decompilation"] = decomp
                 self.analysis_store.store_analysis(program_r.get_id(), analysis)
         else:

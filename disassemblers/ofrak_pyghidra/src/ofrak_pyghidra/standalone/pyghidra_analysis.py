@@ -22,13 +22,18 @@ def _parse_offset(java_object):
 
 def unpack(program_file, decompiled, language=None, base_address=None):
     try:
-        with pyghidra.open_program(program_file, language=language) as flat_api:
+        print(f"pyghidra_analysis:unpack program_file: {program_file}, langauge: {language}")
+        with pyghidra.open_program(program_file, language=language, analyze=False) as flat_api:
             # Java packages must be imported after pyghidra.start or pyghidra.open_program
             from ghidra.app.decompiler import DecompInterface, DecompileOptions
             from ghidra.util.task import TaskMonitor
             from ghidra.program.model.block import BasicBlockModel
             from ghidra.program.model.symbol import RefType
+            from ghidra.base.project import GhidraProject
             from java.math import BigInteger
+
+            program = flat_api.getCurrentProgram()
+            # program.getOptions("Analyzers").setBoolean("Decompiler Switch Analysis", False)
 
             # If base_address is provided, rebase the program
             if base_address is not None:
@@ -40,12 +45,12 @@ def unpack(program_file, decompiled, language=None, base_address=None):
                         base_address = int(base_address)
 
                 # Rebase the program to the specified base address
-                program = flat_api.getCurrentProgram()
                 address_factory = program.getAddressFactory()
                 new_base_addr = address_factory.getDefaultAddressSpace().getAddress(
                     hex(base_address)
                 )
                 program.setImageBase(new_base_addr, True)
+            GhidraProject.analyze(program)
 
             main_dictionary = {}
             code_regions = _unpack_program(flat_api)
@@ -53,6 +58,7 @@ def unpack(program_file, decompiled, language=None, base_address=None):
             main_dictionary["metadata"]["backend"] = "ghidra"
             main_dictionary["metadata"]["decompiled"] = decompiled
             main_dictionary["metadata"]["path"] = program_file
+            main_dictionary["metadata"]["language"] = language
             if base_address is not None:
                 main_dictionary["metadata"]["base_address"] = base_address
             with open(program_file, "rb") as fh:
@@ -205,6 +211,7 @@ def _unpack_code_region(code_region, flat_api):
                 "name": func.getName(),
             }
             functions.append((func, cb))
+            print(f"  added")
         func = flat_api.getFunctionAfter(func)
     return functions
 
@@ -406,13 +413,23 @@ def _decompile(func, decomp_interface, task_monitor):
     return decomp
 
 
-def decompile_all_functions(program_file, language):
-    with pyghidra.open_program(program_file, language=language) as flat_api:
+def decompile_all_functions(program_file, language, base_addr):
+    print(
+        f"pyghidra_analysis: decompile_all_functions program_file: {program_file}, langauge: {language}"
+    )
+    with pyghidra.open_program(program_file, language=language, analyze=False) as flat_api:
         from ghidra.app.decompiler import DecompInterface, DecompileOptions
         from ghidra.util.task import TaskMonitor
+        from ghidra.base.project import GhidraProject
 
         decomp = DecompInterface()
         program = flat_api.getCurrentProgram()
+        if base_addr is not None:
+            address_factory = program.getAddressFactory()
+            new_base_addr = address_factory.getDefaultAddressSpace().getAddress(hex(base_addr))
+            program.setImageBase(new_base_addr, True)
+        # program.getOptions("Analyzers").setBoolean("Decompiler Switch Analysis", False)
+        GhidraProject.analyze(program)
         prog_options = DecompileOptions()
         prog_options.grabFromProgram(program)
         decomp.setOptions(prog_options)
